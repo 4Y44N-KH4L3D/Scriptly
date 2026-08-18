@@ -1,0 +1,50 @@
+/* Scriptly logo integration */
+.brand,
+.auth-page-brand {
+  position: relative;
+}
+
+.brand > .brand-mark,
+.brand > span:last-child,
+.auth-page-brand > .brand-mark,
+.auth-page-brand > span:last-child {
+  display: none !important;
+}
+
+.brand::before,
+.auth-page-brand::before {
+  content: "";
+  display: block;
+  width: 126px;
+  height: 36px;
+  background-image: url('/light.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.theme-dark .brand::before {
+  background-image: url('/dark.png');
+}
+
+.auth-page-brand::before {
+  width: 136px;
+  height: 40px;
+}
+
+.brand:hover::before,
+.auth-page-brand:hover::before {
+  transform: scale(1.025);
+}
+
+.brand::before,
+.auth-page-brand::before {
+  transition: transform 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand::before,
+  .auth-page-brand::before {
+    transition: none;
+  }
+}
