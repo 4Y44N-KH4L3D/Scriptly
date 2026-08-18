@@ -4,6 +4,7 @@ import './index.css'
 import './auth.css'
 import './polish.css'
 import './transitions.css'
+import './Settings.css'
 import App from './App.tsx'
 
 // Give the dedicated auth back button a smooth SPA transition.
