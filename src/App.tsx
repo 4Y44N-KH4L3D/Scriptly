@@ -29,116 +29,42 @@ function go(path: string) {
 }
 
 function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
-  const [email, setEmail] = useState('')
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
+  const [email, setEmail] = useState(''); const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [confirmPassword, setConfirmPassword] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(false)
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setError('')
-    if (mode === 'signup') {
-      if (!/^[A-Za-z0-9_-]{3,20}$/.test(username)) return setError('Username must be 3–20 characters and use only letters, numbers, _ or -.')
-      if (password.length < 8 || !/[0-9]/.test(password)) return setError('Password must be at least 8 characters and include a number.')
-      if (password !== confirmPassword) return setError('Passwords do not match.')
-    }
-    if (!email.includes('@')) return setError('Enter a valid email address.')
-    setLoading(true)
+    if (mode === 'signup') { if (!/^[A-Za-z0-9_-]{3,20}$/.test(username)) return setError('Username must be 3–20 characters and use only letters, numbers, _ or -.'); if (password.length < 8 || !/[0-9]/.test(password)) return setError('Password must be at least 8 characters and include a number.'); if (password !== confirmPassword) return setError('Passwords do not match.') }
+    if (!email.includes('@')) return setError('Enter a valid email address.'); setLoading(true)
     try {
-      if (mode === 'signup') {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email, password, options: { data: { username }, emailRedirectTo: `${window.location.origin}/verify-email` } })
-        if (signUpError) throw signUpError
-        if (data.session && data.user) {
-          await supabase.from('profiles').upsert({ id: data.user.id, username, bio: '', trust_score: 0 }, { onConflict: 'id' }); go('/')
-        } else { window.sessionStorage.setItem('scriptly_verify_email', email); go('/verify-email') }
-      } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-        if (signInError) throw signInError
-        go('/')
-      }
-    } catch (err) { setError(err instanceof Error ? err.message : 'Authentication failed. Please try again.') }
-    finally { setLoading(false) }
+      if (mode === 'signup') { const { data, error: signUpError } = await supabase.auth.signUp({ email, password, options: { data: { username }, emailRedirectTo: `${window.location.origin}/verify-email` } }); if (signUpError) throw signUpError; if (data.session && data.user) { await supabase.from('profiles').upsert({ id: data.user.id, username, bio: '', trust_score: 0 }, { onConflict: 'id' }); go('/') } else { window.sessionStorage.setItem('scriptly_verify_email', email); go('/verify-email') } }
+      else { const { error: signInError } = await supabase.auth.signInWithPassword({ email, password }); if (signInError) throw signInError; go('/') }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Authentication failed. Please try again.') } finally { setLoading(false) }
   }
-
-  return <div className="auth-page-shell"><div className="auth-page-card">
-    <button className="auth-back-button" onClick={() => go('/')} aria-label="Back to home">← <span>Back</span></button>
-    <button className="auth-page-brand" onClick={() => go('/')}><span className="brand-mark">S</span><span>Scriptly</span></button>
-    <div className="auth-page-icon">S</div><h1>{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h1>
-    <p className="auth-page-subtitle">{mode === 'signin' ? 'Sign in to publish scripts and manage your profile.' : 'Join Scriptly and start sharing your code.'}</p>
-    <div className="auth-page-tabs"><button className={mode === 'signin' ? 'selected' : ''} onClick={() => go('/signin')}>Sign in</button><button className={mode === 'signup' ? 'selected' : ''} onClick={() => go('/signup')}>Sign up</button></div>
-    <form onSubmit={handleSubmit} className="auth-page-form">
-      {mode === 'signup' && <label>Username<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="your_username" maxLength={20} autoComplete="username" required /><small>3–20 characters · letters, numbers, _ or -</small></label>}
-      <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required /></label>
-      <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === 'signup' ? '8+ characters, including a number' : 'Your password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required /></label>
-      {mode === 'signup' && <label>Confirm password<input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat your password" autoComplete="new-password" required /></label>}
-      {error && <div className="auth-page-error">{error}</div>}<button className="auth-page-submit" disabled={loading}>{loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}</button>
-    </form>
-    {mode === 'signin' && <button className="forgot-button" type="button">Forgot password?</button>}
-    <p className="auth-page-switch">{mode === 'signin' ? 'New to Scriptly?' : 'Already have an account?'} <button onClick={() => go(mode === 'signin' ? '/signup' : '/signin')}>{mode === 'signin' ? 'Create an account' : 'Sign in'}</button></p>
-  </div></div>
+  return <div className="auth-page-shell"><div className="auth-page-card"><button className="auth-back-button" onClick={() => go('/')} aria-label="Back to home">← <span>Back</span></button><button className="auth-page-brand" onClick={() => go('/')}><span className="brand-mark">S</span><span>Scriptly</span></button><div className="auth-page-icon">S</div><h1>{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h1><p className="auth-page-subtitle">{mode === 'signin' ? 'Sign in to publish scripts and manage your profile.' : 'Join Scriptly and start sharing your code.'}</p><div className="auth-page-tabs"><button className={mode === 'signin' ? 'selected' : ''} onClick={() => go('/signin')}>Sign in</button><button className={mode === 'signup' ? 'selected' : ''} onClick={() => go('/signup')}>Sign up</button></div><form onSubmit={handleSubmit} className="auth-page-form">{mode === 'signup' && <label>Username<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="your_username" maxLength={20} autoComplete="username" required /><small>3–20 characters · letters, numbers, _ or -</small></label>}<label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required /></label><label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === 'signup' ? '8+ characters, including a number' : 'Your password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required /></label>{mode === 'signup' && <label>Confirm password<input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat your password" autoComplete="new-password" required /></label>}{error && <div className="auth-page-error">{error}</div>}<button className="auth-page-submit" disabled={loading}>{loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}</button></form>{mode === 'signin' && <button className="forgot-button" type="button">Forgot password?</button>}<p className="auth-page-switch">{mode === 'signin' ? 'New to Scriptly?' : 'Already have an account?'} <button onClick={() => go(mode === 'signin' ? '/signup' : '/signin')}>{mode === 'signin' ? 'Create an account' : 'Sign in'}</button></p></div></div>
 }
 
 function VerifyEmailPage() {
-  const [email, setEmail] = useState(() => window.sessionStorage.getItem('scriptly_verify_email') ?? '')
-  const [message, setMessage] = useState(''); const [resending, setResending] = useState(false); const [verified, setVerified] = useState(false)
+  const [email, setEmail] = useState(() => window.sessionStorage.getItem('scriptly_verify_email') ?? ''); const [message, setMessage] = useState(''); const [resending, setResending] = useState(false); const [verified, setVerified] = useState(false)
   useEffect(() => { supabase.auth.getSession().then(({ data }) => { if (data.session?.user.email_confirmed_at) setVerified(true) }) }, [])
   const resend = async () => { if (!email) return setMessage('Enter the email you used to create your account.'); setResending(true); setMessage(''); const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: `${window.location.origin}/verify-email` } }); setMessage(error ? error.message : 'Verification email sent. Check your inbox again.'); setResending(false) }
-  return <div className="auth-page-shell"><div className="auth-page-card verify-card">
-    <button className="auth-back-button" onClick={() => go('/')} aria-label="Back to home">← <span>Back</span></button><button className="auth-page-brand" onClick={() => go('/')}><span className="brand-mark">S</span><span>Scriptly</span></button>
-    <div className="verify-icon">✓</div><h1>{verified ? 'Email verified' : 'Check your email'}</h1><p className="auth-page-subtitle">{verified ? 'Your email is verified. You can now sign in to Scriptly.' : 'We sent a verification link to your email. Open it to verify your Scriptly account.'}</p>
-    {!verified && <><label className="verify-email-label">Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" /></label><button className="auth-page-submit" onClick={resend} disabled={resending}>{resending ? 'Sending…' : 'Resend verification email'}</button>{message && <div className="auth-page-info">{message}</div>}</>}
-    <button className="auth-page-secondary" onClick={() => go('/signin')}>Go to sign in</button>
-  </div></div>
+  return <div className="auth-page-shell"><div className="auth-page-card verify-card"><button className="auth-back-button" onClick={() => go('/')} aria-label="Back to home">← <span>Back</span></button><button className="auth-page-brand" onClick={() => go('/')}><span className="brand-mark">S</span><span>Scriptly</span></button><div className="verify-icon">✓</div><h1>{verified ? 'Email verified' : 'Check your email'}</h1><p className="auth-page-subtitle">{verified ? 'Your email is verified. You can now sign in to Scriptly.' : 'We sent a verification link to your email. Open it to verify your Scriptly account.'}</p>{!verified && <><label className="verify-email-label">Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" /></label><button className="auth-page-submit" onClick={resend} disabled={resending}>{resending ? 'Sending…' : 'Resend verification email'}</button>{message && <div className="auth-page-info">{message}</div>}</>}<button className="auth-page-secondary" onClick={() => go('/signin')}>Go to sign in</button></div></div>
 }
 
 function App() {
-  const [path, setPath] = useState(window.location.pathname)
-  const [dark, setDark] = useState(false)
-  const [query, setQuery] = useState('')
-  const [liked, setLiked] = useState<Record<string, boolean>>({})
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [sort, setSort] = useState<'latest' | 'popular' | 'az'>('latest')
-  const [language, setLanguage] = useState('All languages')
-
-  useEffect(() => {
-    const onPop = () => setPath(window.location.pathname)
-    window.addEventListener('popstate', onPop)
-    supabase.auth.getSession().then(({ data }) => setUserEmail(data.session?.user.email ?? null))
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUserEmail(session?.user.email ?? null))
-    return () => { window.removeEventListener('popstate', onPop); listener.subscription.unsubscribe() }
-  }, [])
-
+  const [path, setPath] = useState(window.location.pathname); const [dark, setDark] = useState(false); const [query, setQuery] = useState(''); const [liked, setLiked] = useState<Record<string, boolean>>({}); const [userEmail, setUserEmail] = useState<string | null>(null); const [sort, setSort] = useState<'latest' | 'popular' | 'az'>('latest'); const [language, setLanguage] = useState('All languages')
+  useEffect(() => { const onPop = () => setPath(window.location.pathname); window.addEventListener('popstate', onPop); supabase.auth.getSession().then(({ data }) => setUserEmail(data.session?.user.email ?? null)); const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUserEmail(session?.user.email ?? null)); return () => { window.removeEventListener('popstate', onPop); listener.subscription.unsubscribe() } }, [])
   if (path === '/signin' || path === '/signup') return <AuthPage mode={path === '/signup' ? 'signup' : 'signin'} />
   if (path === '/verify-email') return <VerifyEmailPage />
-
   const signOut = async () => { await supabase.auth.signOut(); setUserEmail(null) }
-  const filtered = scripts.filter((script) => {
-    const matchesSearch = `${script.title} ${script.description} ${script.language} ${script.author}`.toLowerCase().includes(query.toLowerCase())
-    const matchesLanguage = language === 'All languages' || script.language === language
-    return matchesSearch && matchesLanguage
-  })
+  const filtered = scripts.filter((script) => `${script.title} ${script.description} ${script.language} ${script.author}`.toLowerCase().includes(query.toLowerCase()) && (language === 'All languages' || script.language === language))
   const visibleScripts = [...filtered].sort((a, b) => sort === 'popular' ? b.likes - a.likes : sort === 'az' ? a.title.localeCompare(b.title) : 0)
   const copyCode = async (code: string) => { await navigator.clipboard.writeText(code) }
-
   return <div className={`app ${dark ? 'theme-dark' : 'theme-light'}`}>
-    <header className="navbar">
-      <button className="brand" onClick={() => { setQuery(''); go('/') }} aria-label="Scriptly home"><span className="brand-mark">S</span><span>Scriptly</span></button>
-      <div className="nav-center"><button className="nav-link active" onClick={() => go('/')}><Icon name="home" /> <span>Home</span></button><label className="search"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search scripts..." /><kbd>/</kbd></label></div>
-      <div className="nav-actions"><button className="icon-button" aria-label="Settings"><Icon name="settings" /></button>{userEmail ? <button className="profile-button signed-in" onClick={signOut} title="Sign out"><span className="avatar"><Icon name="user" /></span><span className="profile-label">{userEmail.split('@')[0]}</span></button> : <button className="profile-button" aria-label="Sign in" onClick={() => go('/signin')}><span className="avatar"><Icon name="user" /></span><span className="profile-label">Sign in</span></button>}</div>
-    </header>
-    <main>
-      <section className="hero-section"><div className="eyebrow"><span className="pulse" /> COMMUNITY CODE LIBRARY</div><h1>Find it. <span>Build it.</span> Share it.</h1><p>Discover useful scripts, learn from other developers, and publish your own code.</p><div className="hero-actions"><button className="primary-button">Browse scripts</button><button className="secondary-button" onClick={() => go(userEmail ? '/publish' : '/signin')}>Publish a script</button></div></section>
-      <section className="feed-box">
-        <div className="feed-header"><div className="feed-title"><label className="feed-sort">{sort === 'latest' ? 'Latest scripts' : sort === 'popular' ? 'Most popular' : 'A–Z'}<span>⌄</span><select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort scripts"><option value="latest">Latest scripts</option><option value="popular">Most popular</option><option value="az">A–Z</option></select></label><p>Fresh code from the Scriptly community</p></div><div className="feed-filters"><label>Language<select value={language} onChange={(e) => setLanguage(e.target.value)}><option>All languages</option><option>JavaScript</option><option>CSS</option><option>Python</option></select></label><label>Sort<select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}><option value="latest">Latest</option><option value="popular">Most popular</option><option value="az">A–Z</option></select></label></div></div>
-        <section className="script-grid">{visibleScripts.map((script) => { const isLiked = liked[script.title]; return <article className="script-card" key={script.title}>
-          <div className="script-heading"><div><div className="language"><span />{script.language}</div><h3>{script.title}</h3><p>{script.description}</p></div><button className="report-button" aria-label="Report script"><Icon name="flag" /></button></div>
-          <pre><code>{script.code}</code></pre><div className="card-footer"><div className="author"><span className="mini-avatar">{script.author[0].toUpperCase()}</span><span>{script.author}</span></div><div className="card-actions"><button onClick={() => copyCode(script.code)}><Icon name="copy" /> Copy</button><button><Icon name="download" /> Download</button><button className={`like-button ${isLiked ? 'liked' : ''}`} aria-label={isLiked ? 'Unlike script' : 'Like script'} onClick={() => setLiked((current) => ({ ...current, [script.title]: !isLiked }))}><Icon name="heart" /> {script.likes + (isLiked ? 1 : 0)}</button></div></div><button className="view-button">View in full screen <span>↗</span></button>
-        </article> })}</section>
-        {visibleScripts.length === 0 && <div className="empty-scripts">No scripts match those filters.</div>}
-      </section>
-    </main>
-    <footer><span>Scriptly</span><span>Built for people who love to code.</span><button onClick={() => setDark(!dark)}>{dark ? 'Light mode' : 'Dark mode'}</button></footer>
+    <header className="navbar"><button className="brand" onClick={() => { setQuery(''); go('/') }} aria-label="Scriptly home"><span className="brand-mark">S</span><span>Scriptly</span></button><div className="nav-center"><button className="nav-link active" onClick={() => go('/')}><Icon name="home" /> <span>Home</span></button><label className="search"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search scripts..." /><kbd>/</kbd></label></div><div className="nav-actions"><button className="icon-button" aria-label="Settings"><Icon name="settings" /></button>{userEmail ? <button className="profile-button signed-in" onClick={signOut} title="Sign out"><span className="avatar"><Icon name="user" /></span><span className="profile-label">{userEmail.split('@')[0]}</span></button> : <button className="profile-button" aria-label="Sign in" onClick={() => go('/signin')}><span className="avatar"><Icon name="user" /></span><span className="profile-label">Sign in</span></button>}</div></header>
+    <style>{`\n.feed-box{margin:0 0 70px;padding:24px;border:1px solid var(--border);border-radius:24px;background:color-mix(in srgb,var(--surface) 72%,transparent);box-shadow:var(--shadow);}.feed-header{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:22px;}.feed-title{min-width:0;}.feed-title p{margin:7px 0 0;color:var(--muted);font-size:14px;}.feed-sort{position:relative;display:inline-flex;align-items:center;gap:9px;color:var(--heading);font-size:25px;font-weight:800;letter-spacing:-.7px;cursor:pointer;}.feed-sort span{font-size:18px;color:var(--muted);}.feed-sort select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}.feed-filters{display:flex;align-items:center;gap:10px;}.feed-filters label{display:grid;gap:5px;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;}.feed-filters select{min-width:125px;height:40px;padding:0 30px 0 11px;border:1px solid var(--border);border-radius:10px;outline:0;color:var(--heading);background:var(--surface);font-size:12px;cursor:pointer;}.feed-filters select:focus{border-color:var(--green-strong);}.script-grid{grid-template-columns:1fr;gap:18px;padding-bottom:0;}.script-card{width:100%;}.empty-scripts{padding:35px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:15px;}@media(max-width:820px){.feed-box{padding:17px;border-radius:19px;}.feed-header{align-items:flex-start;flex-direction:column;}.feed-filters{width:100%;}.feed-filters label{flex:1;}.feed-filters select{width:100%;}.feed-sort{font-size:22px;}}@media(max-width:520px){.feed-box{padding:14px;}.feed-filters{display:grid;grid-template-columns:1fr 1fr;width:100%;}.feed-filters select{min-width:0;}.feed-title p{font-size:12px;}}\n`}</style>
+    <main><section className="hero-section"><div className="eyebrow"><span className="pulse" /> COMMUNITY CODE LIBRARY</div><h1>Find it. <span>Build it.</span> Share it.</h1><p>Discover useful scripts, learn from other developers, and publish your own code.</p><div className="hero-actions"><button className="primary-button">Browse scripts</button><button className="secondary-button" onClick={() => go(userEmail ? '/publish' : '/signin')}>Publish a script</button></div></section>
+      <section className="feed-box"><div className="feed-header"><div className="feed-title"><label className="feed-sort">{sort === 'latest' ? 'Latest scripts' : sort === 'popular' ? 'Most popular' : 'A–Z'} <span>⌄</span><select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort scripts"><option value="latest">Latest scripts</option><option value="popular">Most popular</option><option value="az">A–Z</option></select></label><p>Fresh code from the Scriptly community</p></div><div className="feed-filters"><label>Language<select value={language} onChange={(e) => setLanguage(e.target.value)}><option>All languages</option><option>JavaScript</option><option>CSS</option><option>Python</option></select></label><label>Sort<select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}><option value="latest">Latest</option><option value="popular">Most popular</option><option value="az">A–Z</option></select></label></div></div>
+        <section className="script-grid">{visibleScripts.map((script) => { const isLiked = liked[script.title]; return <article className="script-card" key={script.title}><div className="script-heading"><div><div className="language"><span />{script.language}</div><h3>{script.title}</h3><p>{script.description}</p></div><button className="report-button" aria-label="Report script"><Icon name="flag" /></button></div><pre><code>{script.code}</code></pre><div className="card-footer"><div className="author"><span className="mini-avatar">{script.author[0].toUpperCase()}</span><span>{script.author}</span></div><div className="card-actions"><button onClick={() => copyCode(script.code)}><Icon name="copy" /> Copy</button><button><Icon name="download" /> Download</button><button className={`like-button ${isLiked ? 'liked' : ''}`} aria-label={isLiked ? 'Unlike script' : 'Like script'} onClick={() => setLiked((current) => ({ ...current, [script.title]: !isLiked }))}><Icon name="heart" /> {script.likes + (isLiked ? 1 : 0)}</button></div></div><button className="view-button">View in full screen <span>↗</span></button></article> })}</section>{visibleScripts.length === 0 && <div className="empty-scripts">No scripts match those filters.</div>}</section>
+    </main><footer><span>Scriptly</span><span>Built for people who love to code.</span><button onClick={() => setDark(!dark)}>{dark ? 'Light mode' : 'Dark mode'}</button></footer>
   </div>
 }
 
