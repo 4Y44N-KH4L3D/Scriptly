@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './auth.css'
 import './polish.css'
+import './transitions.css'
 import App from './App.tsx'
 
 // Give the dedicated auth back button a smooth SPA transition.
