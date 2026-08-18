@@ -122,6 +122,7 @@ function App() {
   const [language, setLanguage] = useState('All languages')
   const [sortOpen, setSortOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     const onPop = () => setPath(window.location.pathname)
@@ -168,14 +169,38 @@ function App() {
       .dropdown-check { font-size:13px; }
       .script-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; padding-bottom:0; }
       .script-card { min-width:0; }
-      @media (max-width:820px) { .feed-box { padding:18px; border-radius:20px; } .feed-header { align-items:flex-start; flex-direction:column; } .feed-filters { width:100%; } .language-filter, .language-button { width:100%; } .language-button { justify-content:space-between; } .dropdown-menu { left:0; right:auto; width:100%; } .script-grid { grid-template-columns:1fr; } }
+      .navbar-brand-wrap { display:flex; align-items:center; gap:10px; }
+      .brand { position:relative; gap:11px; padding:4px; border-radius:14px; }
+      .brand:hover .brand-mark { transform:rotate(-4deg) scale(1.04); box-shadow:0 0 0 5px rgba(125,240,165,.08),0 0 30px rgba(125,240,165,.28); }
+      .brand-mark { width:38px; height:38px; border-radius:12px; font-size:18px; font-weight:950; transition:transform .2s ease,box-shadow .2s ease; }
+      .brand-name { font-size:21px; font-weight:900; letter-spacing:-.8px; }
+      .settings-button { width:44px; height:44px; display:grid; place-items:center; color:var(--heading); background:var(--surface); border:1px solid var(--border); border-radius:13px; box-shadow:0 5px 18px rgba(0,0,0,.05); transition:transform .2s ease,border-color .2s ease,background .2s ease; }
+      .settings-button:hover { transform:translateY(-1px) rotate(8deg); border-color:var(--green-strong); background:var(--surface-2); }
+      .settings-button svg { width:21px; height:21px; }
+      .settings-backdrop { position:fixed; inset:0; z-index:80; background:rgba(5,10,7,.5); backdrop-filter:blur(7px); animation:modal-fade .18s ease; }
+      .settings-panel { position:fixed; top:82px; right:clamp(14px,4vw,64px); z-index:81; width:min(360px,calc(100vw - 28px)); padding:20px; border:1px solid var(--border); border-radius:20px; background:var(--surface); color:var(--text); box-shadow:0 25px 70px rgba(0,0,0,.2); animation:modal-rise .22s cubic-bezier(.2,.8,.2,1); }
+      .settings-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+      .settings-head h2 { margin:0; color:var(--heading); font-size:20px; letter-spacing:-.5px; }
+      .settings-close { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:var(--muted); background:var(--surface-2); }
+      .settings-close:hover { color:var(--heading); }
+      .settings-row { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:13px 0; border-top:1px solid var(--border); }
+      .settings-row strong { display:block; color:var(--heading); font-size:13px; }
+      .settings-row span { display:block; margin-top:3px; color:var(--muted); font-size:11px; }
+      .settings-toggle { min-width:72px; padding:8px 11px; border-radius:10px; color:#07110a; background:var(--green); font-size:11px; font-weight:850; }
+      @media (max-width:820px) { .feed-box { padding:18px; border-radius:20px; } .feed-header { align-items:flex-start; flex-direction:column; } .feed-filters { width:100%; } .language-filter, .language-button { width:100%; } .language-button { justify-content:space-between; } .dropdown-menu { left:0; right:auto; width:100%; } .script-grid { grid-template-columns:1fr; } .brand-name { font-size:19px; } .settings-panel { top:76px; } }
     `}</style>
 
     <header className="navbar">
-      <button className="brand" onClick={() => { setQuery(''); go('/') }} aria-label="Scriptly home"><span className="brand-mark">S</span><span>Scriptly</span></button>
+      <button className="brand" onClick={() => { setQuery(''); go('/') }} aria-label="Scriptly home"><span className="brand-mark">S</span><span className="brand-name">Scriptly</span></button>
       <div className="nav-center"><button className="nav-link active" onClick={() => go('/')}><Icon name="home" /> <span>Home</span></button><label className="search"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search scripts..." /><kbd>/</kbd></label></div>
-      <div className="nav-actions"><button className="icon-button" aria-label="Settings"><Icon name="settings" /></button>{userEmail ? <button className="profile-button signed-in" onClick={signOut} title="Sign out"><span className="avatar"><Icon name="user" /></span><span className="profile-label">{userEmail.split('@')[0]}</span></button> : <button className="profile-button" aria-label="Sign in" onClick={() => go('/signin')}><span className="avatar"><Icon name="user" /></span><span className="profile-label">Sign in</span></button>}</div>
+      <div className="nav-actions"><button className="settings-button" aria-label="Open settings" aria-expanded={settingsOpen} onClick={() => setSettingsOpen(true)}><Icon name="settings" /></button>{userEmail ? <button className="profile-button signed-in" onClick={signOut} title="Sign out"><span className="avatar"><Icon name="user" /></span><span className="profile-label">{userEmail.split('@')[0]}</span></button> : <button className="profile-button" aria-label="Sign in" onClick={() => go('/signin')}><span className="avatar"><Icon name="user" /></span><span className="profile-label">Sign in</span></button>}</div>
     </header>
+
+    {settingsOpen && <><button className="settings-backdrop" aria-label="Close settings" onClick={() => setSettingsOpen(false)} /><section className="settings-panel" aria-label="Settings">
+      <div className="settings-head"><h2>Settings</h2><button className="settings-close" aria-label="Close settings" onClick={() => setSettingsOpen(false)}><Icon name="x" /></button></div>
+      <div className="settings-row"><div><strong>Appearance</strong><span>Switch between light and dark mode.</span></div><button className="settings-toggle" onClick={() => setDark((current) => !current)}>{dark ? 'Light mode' : 'Dark mode'}</button></div>
+      <div className="settings-row"><div><strong>Account</strong><span>{userEmail ? `Signed in as ${userEmail}` : 'You are not signed in.'}</span></div>{!userEmail && <button className="settings-toggle" onClick={() => { setSettingsOpen(false); go('/signin') }}>Sign in</button>}</div>
+    </section></>}
 
     <main>
       <section className="hero-section"><div className="eyebrow"><span className="pulse" /> COMMUNITY CODE LIBRARY</div><h1>Find it. <span>Build it.</span> Share it.</h1><p>Discover useful scripts, learn from other developers, and publish your own code.</p><div className="hero-actions"><button className="primary-button">Browse scripts</button><button className="secondary-button" onClick={() => go(userEmail ? '/publish' : '/signin')}>Publish a script</button></div></section>
@@ -184,41 +209,14 @@ function App() {
         <div className="feed-header">
           <div className="feed-title">
             <div className="feed-sort-wrap">
-              <button className={`feed-sort-button ${sortOpen ? 'open' : ''}`} onClick={() => { setSortOpen(!sortOpen); setLanguageOpen(false) }} aria-expanded={sortOpen} aria-haspopup="listbox">
-                {sortLabel}<span className="chevron">⌄</span>
-              </button>
-              {sortOpen && <div className="dropdown-menu" role="listbox">
-                {([['latest', 'Latest scripts'], ['popular', 'Most popular'], ['az', 'A–Z']] as const).map(([value, label]) => <button key={value} className={`dropdown-option ${sort === value ? 'selected' : ''}`} onClick={() => chooseSort(value)}>{label}{sort === value && <span className="dropdown-check">✓</span>}</button>)}
-              </div>}
+              <button className={`feed-sort-button ${sortOpen ? 'open' : ''}`} onClick={() => { setSortOpen(!sortOpen); setLanguageOpen(false) }} aria-expanded={sortOpen} aria-haspopup="listbox">{sortLabel}<span className="chevron">⌄</span></button>
+              {sortOpen && <div className="dropdown-menu" role="listbox">{([['latest', 'Latest scripts'], ['popular', 'Most popular'], ['az', 'A–Z']] as const).map(([value, label]) => <button key={value} className={`dropdown-option ${sort === value ? 'selected' : ''}`} onClick={() => chooseSort(value)}>{label}{sort === value && <span className="dropdown-check">✓</span>}</button>)}</div>}
             </div>
             <p>Fresh code from the Scriptly community</p>
           </div>
-
-          <div className="feed-filters">
-            <div className="language-filter">
-              <label className="filter-label">Language
-                <button className={`language-button ${languageOpen ? 'open' : ''}`} onClick={() => { setLanguageOpen(!languageOpen); setSortOpen(false) }} aria-expanded={languageOpen} aria-haspopup="listbox">
-                  <span>{language}</span><span className="chevron">⌄</span>
-                </button>
-              </label>
-              {languageOpen && <div className="dropdown-menu" role="listbox">
-                {languages.map((item) => <button key={item} className={`dropdown-option ${language === item ? 'selected' : ''}`} onClick={() => chooseLanguage(item)}>{item}{language === item && <span className="dropdown-check">✓</span>}</button>)}
-              </div>}
-            </div>
-          </div>
+          <div className="feed-filters"><div className="language-filter"><label className="filter-label">Language<button className={`language-button ${languageOpen ? 'open' : ''}`} onClick={() => { setLanguageOpen(!languageOpen); setSortOpen(false) }} aria-expanded={languageOpen} aria-haspopup="listbox"><span>{language}</span><span className="chevron">⌄</span></button></label>{languageOpen && <div className="dropdown-menu" role="listbox">{languages.map((item) => <button key={item} className={`dropdown-option ${language === item ? 'selected' : ''}`} onClick={() => chooseLanguage(item)}>{item}{language === item && <span className="dropdown-check">✓</span>}</button>)}</div>}</div></div>
         </div>
-
-        <section className="script-grid">
-          {visibleScripts.map((script) => {
-            const isLiked = liked[script.title]
-            return <article className="script-card" key={script.title}>
-              <div className="script-heading"><div><div className="language"><span />{script.language}</div><h3>{script.title}</h3><p>{script.description}</p></div><button className="report-button" aria-label="Report script"><Icon name="flag" /></button></div>
-              <pre><code>{script.code}</code></pre>
-              <div className="card-footer"><div className="author"><span className="mini-avatar">{script.author[0].toUpperCase()}</span><span>{script.author}</span></div><div className="card-actions"><button onClick={() => copyCode(script.code)}><Icon name="copy" /> Copy</button><button><Icon name="download" /> Download</button><button className={`like-button ${isLiked ? 'liked' : ''}`} aria-label={isLiked ? 'Unlike script' : 'Like script'} onClick={() => setLiked((current) => ({ ...current, [script.title]: !isLiked }))}><Icon name="heart" /> {script.likes + (isLiked ? 1 : 0)}</button></div></div>
-              <button className="view-button">View in full screen <span>↗</span></button>
-            </article>
-          })}
-        </section>
+        <section className="script-grid">{visibleScripts.map((script) => { const isLiked = liked[script.title]; return <article className="script-card" key={script.title}><div className="script-heading"><div><div className="language"><span />{script.language}</div><h3>{script.title}</h3><p>{script.description}</p></div><button className="report-button" aria-label="Report script"><Icon name="flag" /></button></div><pre><code>{script.code}</code></pre><div className="card-footer"><div className="author"><span className="mini-avatar">{script.author[0].toUpperCase()}</span><span>{script.author}</span></div><div className="card-actions"><button onClick={() => copyCode(script.code)}><Icon name="copy" /> Copy</button><button><Icon name="download" /> Download</button><button className={`like-button ${isLiked ? 'liked' : ''}`} aria-label={isLiked ? 'Unlike script' : 'Like script'} onClick={() => setLiked((current) => ({ ...current, [script.title]: !isLiked }))}><Icon name="heart" /> {script.likes + (isLiked ? 1 : 0)}</button></div></div><button className="view-button">View in full screen <span>↗</span></button></article> })}</section>
         {visibleScripts.length === 0 && <div className="empty-scripts">No scripts match those filters.</div>}
       </section>
     </main>
