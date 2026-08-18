@@ -3,4 +3,4 @@ import type { FormEvent, Dispatch, SetStateAction } from 'react'
 import './App.css'
 import { supabase } from './lib/supabase'
 
-// Temporary safety restoration marker; use git history commit 2010c20 for the complete known-good source.
+// Known-good baseline is preserved in Git history at commit 2010c20. Do not replace this file with a shortened version.
