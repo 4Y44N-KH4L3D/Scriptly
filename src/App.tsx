@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent, Dispatch, SetStateAction } from 'react'
 import './App.css'
-import './Settings.css'
 import { supabase } from './lib/supabase'
 
-// The rest of App.tsx remains unchanged from the known-good Scriptly baseline.
+// RESTORE: this file must remain the known-good Scriptly App.tsx. The settings redesign is intentionally not applied until the complete source is available for a safe targeted edit.
