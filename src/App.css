@@ -63,6 +63,10 @@ pre code { padding: 0; background: transparent; color: inherit; font: inherit; w
 .card-actions .like-button:hover svg { transform: scale(1.15); }
 .card-actions .like-button.liked { color: #ef4444 !important; }
 .card-actions .like-button.liked svg { fill: #ef4444 !important; stroke: #ef4444 !important; color: #ef4444 !important; transform: scale(1.15); }
+.card-actions .like-button:active svg { transform: scale(.82); }
+.card-actions .like-button.liked:active svg { transform: scale(.82); }
+@keyframes heart-pop { 0% { transform: scale(1); } 35% { transform: scale(1.45) rotate(-7deg); } 65% { transform: scale(.92) rotate(4deg); } 100% { transform: scale(1.15) rotate(0); } }
+.card-actions .like-button.liked svg { animation: heart-pop .42s cubic-bezier(.34,1.56,.64,1); }
 .view-button { width: 100%; margin-top: 13px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; color: var(--heading); background: transparent; font-size: 12px; font-weight: 700; transition: .2s ease; }
 .view-button:hover { border-color: var(--green-strong); color: var(--green-strong); background: rgba(125,240,165,.05); }
 .view-button span { margin-left: 5px; }
