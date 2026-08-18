@@ -1,15 +1,176 @@
 import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import './App.css'
 import { supabase } from './lib/supabase'
 
-type Script = { title: string; description: string; language: string; code: string; author: string; likes: number }
+type Script = {
+  title: string
+  description: string
+  language: string
+  code: string
+  author: string
+  likes: number
+}
+
+type UiLanguage =
+  | 'English'
+  | 'Spanish'
+  | 'French'
+  | 'German'
+  | 'Portuguese'
+  | 'Italian'
+  | 'Dutch'
+  | 'Arabic'
+  | 'Bengali'
+  | 'Turkish'
+  | 'Hindi'
+  | 'Urdu'
+  | 'Japanese'
+  | 'Korean'
+
+type Translation = {
+  settings: string
+  settingsSubtitle: string
+  appearance: string
+  appearanceText: string
+  language: string
+  languageText: string
+  dark: string
+  light: string
+  switchTo: string
+  back: string
+  home: string
+  close: string
+  interfaceLanguage: string
+  saved: string
+  search: string
+  signIn: string
+  community: string
+  hero: string
+  discover: string
+  browse: string
+  publish: string
+  latest: string
+  popular: string
+  az: string
+  fresh: string
+}
 
 const scripts: Script[] = [
-  { title: 'Fetch JSON safely', description: 'A small async helper for fetching JSON with useful error handling.', language: 'JavaScript', author: 'ayaan', likes: 24, code: `async function fetchJson(url) {\n  const response = await fetch(url)\n\n  if (!response.ok) {\n    throw new Error(\`HTTP \${response.status}\`)\n  }\n\n  return response.json()\n}` },
+  {
+    title: 'Fetch JSON safely',
+    description: 'A small async helper for fetching JSON with useful error handling.',
+    language: 'JavaScript',
+    author: 'ayaan',
+    likes: 24,
+    code: `async function fetchJson(url) {\n  const response = await fetch(url)\n\n  if (!response.ok) {\n    throw new Error(\`HTTP \${response.status}\`)\n  }\n\n  return response.json()\n}`,
+  },
 ]
 
-const languages = ['All languages', 'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'Rust', 'Go', 'HTML', 'CSS', 'PHP', 'Ruby', 'Kotlin', 'Swift', 'Bash', 'SQL', 'Lua', 'Dart', 'R', 'Scala', 'Perl', 'Haskell', 'Assembly', 'Other']
+const fallbackProgrammingLanguages = [
+  'JavaScript',
+  'TypeScript',
+  'Python',
+  'Java',
+  'C++',
+  'C#',
+  'Rust',
+  'Go',
+  'HTML',
+  'CSS',
+  'PHP',
+  'Ruby',
+  'Kotlin',
+  'Swift',
+  'Bash',
+  'SQL',
+  'Lua',
+  'Dart',
+  'R',
+  'Scala',
+  'Perl',
+  'Haskell',
+  'Assembly',
+]
+
+const interfaceLanguages: UiLanguage[] = [
+  'English',
+  'Spanish',
+  'French',
+  'German',
+  'Portuguese',
+  'Italian',
+  'Dutch',
+  'Arabic',
+  'Bengali',
+  'Turkish',
+  'Hindi',
+  'Urdu',
+  'Japanese',
+  'Korean',
+]
+
+const english: Translation = {
+  settings: 'Settings',
+  settingsSubtitle: 'Customize how Scriptly looks and behaves.',
+  appearance: 'Appearance',
+  appearanceText: 'Choose how Scriptly looks on your device.',
+  language: 'Language',
+  languageText: 'Choose the language used for the Scriptly interface.',
+  dark: 'Dark mode',
+  light: 'Light mode',
+  switchTo: 'Switch to',
+  back: 'Back to Scriptly',
+  home: 'Home',
+  close: 'Close',
+  interfaceLanguage: 'Interface language',
+  saved: 'Your preferences are saved automatically.',
+  search: 'Search scripts...',
+  signIn: 'Sign in',
+  community: 'SCRIPTLY COMMUNITY',
+  hero: 'Find it. Build it. Share it.',
+  discover: 'Discover useful scripts, learn from others, and share your own code.',
+  browse: 'Browse scripts',
+  publish: 'Publish a script',
+  latest: 'Latest',
+  popular: 'Popular',
+  az: 'A–Z',
+  fresh: 'Fresh scripts from the community.',
+}
+
+const spanish: Translation = {
+  ...english,
+  settings: 'Configuración',
+  settingsSubtitle: 'Personaliza cómo se ve y funciona Scriptly.',
+  appearance: 'Apariencia',
+  appearanceText: 'Elige cómo se ve Scriptly en tu dispositivo.',
+  language: 'Idioma',
+  languageText: 'Elige el idioma de la interfaz de Scriptly.',
+  dark: 'Modo oscuro',
+  light: 'Modo claro',
+  switchTo: 'Cambiar a',
+  back: 'Volver a Scriptly',
+  home: 'Inicio',
+  close: 'Cerrar',
+  interfaceLanguage: 'Idioma de la interfaz',
+  saved: 'Tus preferencias se guardan automáticamente.',
+  search: 'Buscar scripts...',
+  signIn: 'Iniciar sesión',
+  community: 'COMUNIDAD SCRIPTLY',
+  hero: 'Encuéntralo. Créalo. Compártelo.',
+  discover: 'Descubre scripts útiles, aprende de otros y comparte tu propio código.',
+  browse: 'Explorar scripts',
+  publish: 'Publicar script',
+  latest: 'Más recientes',
+  popular: 'Populares',
+  fresh: 'Scripts recientes de la comunidad.',
+}
+
+const translations: Partial<Record<UiLanguage, Translation>> = {
+  English: english,
+  Spanish: spanish,
+}
+
 type SortOption = 'latest' | 'popular' | 'az'
 
 function Icon({ name }: { name: 'search' | 'home' | 'settings' | 'user' | 'heart' | 'copy' | 'download' | 'flag' | 'x' }) {
@@ -32,6 +193,39 @@ function go(path: string) {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
+function normalizeLanguageName(name: string) {
+  const key = name.trim().toLowerCase()
+  const aliases: Record<string, string> = {
+    javascript: 'JavaScript',
+    js: 'JavaScript',
+    typescript: 'TypeScript',
+    ts: 'TypeScript',
+    python: 'Python',
+    python3: 'Python',
+    cpp: 'C++',
+    'c++': 'C++',
+    csharp: 'C#',
+    'c#': 'C#',
+    golang: 'Go',
+    go: 'Go',
+    rust: 'Rust',
+    java: 'Java',
+    php: 'PHP',
+    ruby: 'Ruby',
+    kotlin: 'Kotlin',
+    swift: 'Swift',
+    bash: 'Bash',
+    shell: 'Bash',
+    sql: 'SQL',
+    lua: 'Lua',
+    dart: 'Dart',
+    r: 'R',
+    html: 'HTML',
+    css: 'CSS',
+  }
+  return aliases[key] ?? name
+}
+
 function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
@@ -39,8 +233,10 @@ function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); setError('')
+    event.preventDefault()
+    setError('')
     if (mode === 'signup') {
       if (!/^[A-Za-z0-9_-]{3,20}$/.test(username)) return setError('Username must be 3–20 characters and use only letters, numbers, _ or -.')
       if (password.length < 8 || !/[0-9]/.test(password)) return setError('Password must be at least 8 characters and include a number.')
@@ -52,30 +248,48 @@ function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
       if (mode === 'signup') {
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password, options: { data: { username }, emailRedirectTo: `${window.location.origin}/verify-email` } })
         if (signUpError) throw signUpError
-        if (data.session && data.user) { await supabase.from('profiles').upsert({ id: data.user.id, username, bio: '', trust_score: 0 }, { onConflict: 'id' }); go('/') }
-        else { window.sessionStorage.setItem('scriptly_verify_email', email); go('/verify-email') }
-      } else { const { error: signInError } = await supabase.auth.signInWithPassword({ email, password }); if (signInError) throw signInError; go('/') }
-    } catch (err) { setError(err instanceof Error ? err.message : 'Authentication failed. Please try again.') }
-    finally { setLoading(false) }
+        if (data.session && data.user) {
+          await supabase.from('profiles').upsert({ id: data.user.id, username, bio: '', trust_score: 0 }, { onConflict: 'id' })
+          go('/')
+        } else {
+          window.sessionStorage.setItem('scriptly_verify_email', email)
+          go('/verify-email')
+        }
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+        if (signInError) throw signInError
+        go('/')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Authentication failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
+
   return <div className="auth-page-shell"><div className="auth-page-card"><button className="auth-back-button" onClick={() => go('/')} aria-label="Back to home">← <span>Back</span></button><button className="auth-page-brand" onClick={() => go('/')}><span className="brand-mark">S</span><span>Scriptly</span></button><div className="auth-page-icon">S</div><h1>{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h1><p className="auth-page-subtitle">{mode === 'signin' ? 'Sign in to publish scripts and manage your profile.' : 'Join Scriptly and start sharing your code.'}</p><div className="auth-page-tabs"><button className={mode === 'signin' ? 'selected' : ''} onClick={() => go('/signin')}>Sign in</button><button className={mode === 'signup' ? 'selected' : ''} onClick={() => go('/signup')}>Sign up</button></div><form onSubmit={handleSubmit} className="auth-page-form">{mode === 'signup' && <label>Username<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="your_username" maxLength={20} autoComplete="username" required /><small>3–20 characters · letters, numbers, _ or -</small></label>}<label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required /></label><label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === 'signup' ? '8+ characters, including a number' : 'Your password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required /></label>{mode === 'signup' && <label>Confirm password<input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat your password" autoComplete="new-password" required /></label>}{error && <div className="auth-page-error">{error}</div>}<button className="auth-page-submit" disabled={loading}>{loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}</button></form>{mode === 'signin' && <button className="forgot-button" type="button">Forgot password?</button>}<p className="auth-page-switch">{mode === 'signin' ? 'New to Scriptly?' : 'Already have an account?'} <button onClick={() => go(mode === 'signin' ? '/signup' : '/signin')}>{mode === 'signin' ? 'Create an account' : 'Sign in'}</button></p></div></div>
 }
 
 function VerifyEmailPage() {
   const [email, setEmail] = useState(() => window.sessionStorage.getItem('scriptly_verify_email') ?? '')
-  const [message, setMessage] = useState(''); const [resending, setResending] = useState(false); const [verified, setVerified] = useState(false)
+  const [message, setMessage] = useState('')
+  const [resending, setResending] = useState(false)
+  const [verified, setVerified] = useState(false)
   useEffect(() => { supabase.auth.getSession().then(({ data }) => { if (data.session?.user.email_confirmed_at) setVerified(true) }) }, [])
-  const resend = async () => { if (!email) return setMessage('Enter the email you used to create your account.'); setResending(true); setMessage(''); const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: `${window.location.origin}/verify-email` } }); setMessage(error ? error.message : 'Verification email sent. Check your inbox again.'); setResending(false) }
+  const resend = async () => {
+    if (!email) return setMessage('Enter the email you used to create your account.')
+    setResending(true)
+    setMessage('')
+    const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: `${window.location.origin}/verify-email` } })
+    setMessage(error ? error.message : 'Verification email sent. Check your inbox again.')
+    setResending(false)
+  }
   return <div className="auth-page-shell"><div className="auth-page-card verify-card"><button className="auth-back-button" onClick={() => go('/')} aria-label="Back to home">← <span>Back</span></button><button className="auth-page-brand" onClick={() => go('/')}><span className="brand-mark">S</span><span>Scriptly</span></button><div className="verify-icon">✓</div><h1>{verified ? 'Email verified' : 'Check your email'}</h1><p className="auth-page-subtitle">{verified ? 'Your email is verified. You can now sign in to Scriptly.' : 'We sent a verification link to your email. Open it to verify your Scriptly account.'}</p>{!verified && <><label className="verify-email-label">Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" /></label><button className="auth-page-submit" onClick={resend} disabled={resending}>{resending ? 'Sending…' : 'Resend verification email'}</button>{message && <div className="auth-page-info">{message}</div>}</>}<button className="auth-page-secondary" onClick={() => go('/signin')}>Go to sign in</button></div></div>
 }
 
 function SettingsPage({ dark, setDark, language, setLanguage }: { dark: boolean; setDark: Dispatch<SetStateAction<boolean>>; language: UiLanguage; setLanguage: Dispatch<SetStateAction<UiLanguage>> }) {
-  const t = translations[language]
-  return <div className={`app settings-app ${dark ? 'theme-dark' : 'theme-light'}`}>
-    <style>{`@keyframes settings-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}.settings-app .settings-shell{width:min(920px,calc(100% - 32px));margin:0 auto;padding:48px 0 90px;animation:settings-in .35s ease both}.settings-app .settings-back{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--muted);font-size:13px;font-weight:700;padding:7px 0;margin-bottom:30px}.settings-app .settings-back:hover{color:var(--heading)}.settings-app .settings-hero{display:flex;align-items:center;gap:18px;margin-bottom:30px}.settings-app .settings-hero-icon{width:62px;height:62px;display:grid;place-items:center;border:1px solid var(--border);border-radius:18px;background:linear-gradient(145deg,var(--surface),var(--surface-2));color:var(--green-strong);box-shadow:var(--shadow)}.settings-app .settings-hero-icon svg{width:29px;height:29px}.settings-app .settings-kicker{margin:0 0 3px;color:var(--green-strong);font-size:11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase}.settings-app .settings-hero h1{margin:0;color:var(--heading);font-size:38px;line-height:1.05;letter-spacing:-1.5px}.settings-app .settings-hero p:last-child{margin:6px 0 0;color:var(--muted);font-size:14px}.settings-app .settings-group{margin-top:18px;overflow:hidden;border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}.settings-app .settings-group-title{padding:18px 22px 14px;border-bottom:1px solid var(--border)}.settings-app .settings-group-title h2{margin:0;color:var(--heading);font-size:15px}.settings-app .settings-group-title p{margin:5px 0 0;color:var(--muted);font-size:12px}.settings-app .settings-row{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:20px 22px;border-bottom:1px solid var(--border)}.settings-app .settings-row:last-child{border-bottom:0}.settings-app .settings-row-copy{min-width:0}.settings-app .settings-row-copy strong{display:block;color:var(--heading);font-size:14px}.settings-app .settings-row-copy span{display:block;margin-top:5px;color:var(--muted);font-size:12px;line-height:1.5}.settings-app .settings-control{min-width:190px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 13px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);color:var(--heading);font-size:12px;font-weight:850;text-align:left;transition:.18s ease}.settings-app .settings-control:hover{border-color:var(--green-strong);transform:translateY(-1px)}.settings-app .settings-control small{display:block;margin-top:3px;color:var(--muted);font-size:10px;font-weight:600}.settings-app .settings-control .control-arrow{color:var(--muted);font-size:16px}.settings-app .settings-select-wrap{position:relative;min-width:190px}.settings-app .settings-select{appearance:none;width:100%;padding:12px 38px 12px 13px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);color:var(--heading);font:inherit;font-size:12px;font-weight:850;outline:0}.settings-app .settings-select:focus{border-color:var(--green-strong);box-shadow:0 0 0 3px rgba(66,216,121,.12)}.settings-app .select-arrow{position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted)}.settings-app .settings-note{display:flex;align-items:center;gap:7px;margin-top:12px;color:var(--muted);font-size:11px}.settings-app .settings-note-dot{width:6px;height:6px;border-radius:50%;background:var(--green-strong)}@media(max-width:650px){.settings-app .settings-shell{width:min(100% - 24px,920px);padding-top:30px}.settings-app .settings-hero h1{font-size:31px}.settings-app .settings-row{align-items:flex-start;flex-direction:column;gap:14px}.settings-app .settings-control,.settings-app .settings-select-wrap{width:100%;min-width:0}.settings-app .settings-hero-icon{width:54px;height:54px}}`}</style>
-    <header className="navbar"><button className="brand" onClick={() => go('/')} aria-label="Scriptly home"><span className="brand-mark">S</span><span>Scriptly</span></button><div className="nav-center"><button className="nav-link" onClick={() => go('/')}><Icon name="home" /> <span>Home</span></button></div><div className="nav-actions"><button className="profile-button" onClick={() => go('/')}><span className="avatar"><Icon name="x" /></span><span className="profile-label">Close</span></button></div></header>
-    <main><section className="settings-shell"><button className="settings-back" onClick={() => go('/')}>← {t.back}</button><div className="settings-hero"><div className="settings-hero-icon"><Icon name="settings" /></div><div><p className="settings-kicker">Scriptly</p><h1>{t.settings}</h1><p>{t.settingsSubtitle}</p></div></div><div className="settings-group"><div className="settings-group-title"><h2>{t.appearance}</h2><p>{t.appearanceText}</p></div><div className="settings-row"><div className="settings-row-copy"><strong>{dark ? t.dark : t.light}</strong><span>{t.switchTo} {dark ? t.light : t.dark}</span></div><button className="settings-control" onClick={() => setDark(current => !current)}><span>{dark ? t.dark : t.light}<small>{t.switchTo} {dark ? t.light : t.dark}</small></span><span className="control-arrow">→</span></button></div></div><div className="settings-group"><div className="settings-group-title"><h2>{t.interfaceLanguage}</h2><p>{t.languageText}</p></div><div className="settings-row"><div className="settings-row-copy"><strong>{language}</strong><span>{t.languageText}</span></div><div className="settings-select-wrap"><select className="settings-select" value={language} onChange={e => setLanguage(e.target.value as UiLanguage)}>{interfaceLanguages.map(item => <option key={item} value={item}>{item}</option>)}</select><span className="select-arrow">⌄</span></div></div></div><div className="settings-note"><span className="settings-note-dot" />{t.saved}</div></section></main><footer><span>Scriptly</span><span>Built for people who love to code.</span><button onClick={() => setDark(current => !current)}>{dark ? `${t.switchTo} ${t.light}` : `${t.switchTo} ${t.dark}`}</button></footer>
-  </div>
+  const t = translations[language] ?? english
+  return <div className={`app settings-app ${dark ? 'theme-dark' : 'theme-light'}`}><header className="navbar"><button className="brand" onClick={() => go('/')} aria-label="Scriptly home"><span className="brand-mark">S</span><span>Scriptly</span></button><div className="nav-center"><button className="nav-link" onClick={() => go('/')}><Icon name="home" /> <span>{t.home}</span></button></div><div className="nav-actions"><button className="profile-button" onClick={() => go('/')}><span className="avatar"><Icon name="x" /></span><span className="profile-label">{t.close}</span></button></div></header><main><section className="settings-shell"><button className="settings-back" onClick={() => go('/')}>← {t.back}</button><div className="settings-hero"><div className="settings-hero-icon"><Icon name="settings" /></div><div><p className="settings-kicker">Scriptly</p><h1>{t.settings}</h1><p>{t.settingsSubtitle}</p></div></div><div className="settings-group"><div className="settings-group-title"><h2>{t.appearance}</h2><p>{t.appearanceText}</p></div><div className="settings-row"><div className="settings-row-copy"><strong>{dark ? t.dark : t.light}</strong><span>{t.switchTo} {dark ? t.light : t.dark}</span></div><button className="settings-control" onClick={() => setDark(current => !current)}><span>{dark ? t.dark : t.light}<small>{t.switchTo} {dark ? t.light : t.dark}</small></span><span className="control-arrow">→</span></button></div></div><div className="settings-group"><div className="settings-group-title"><h2>{t.interfaceLanguage}</h2><p>{t.languageText}</p></div><div className="settings-row"><div className="settings-row-copy"><strong>{language}</strong><span>{t.languageText}</span></div><div className="settings-select-wrap"><select className="settings-select" value={language} onChange={e => setLanguage(e.target.value as UiLanguage)}>{interfaceLanguages.map(item => <option key={item} value={item}>{item}</option>)}</select><span className="select-arrow">⌄</span></div></div></div><div className="settings-note"><span className="settings-note-dot" />{t.saved}</div></section></main><footer><span>Scriptly</span><span>Built for people who love to code.</span><button onClick={() => setDark(current => !current)}>{dark ? `${t.switchTo} ${t.light}` : `${t.switchTo} ${t.dark}`}</button></footer></div>
 }
 
 function App() {
@@ -86,30 +300,58 @@ function App() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [sort, setSort] = useState<SortOption>('latest')
   const [language, setLanguage] = useState('All languages')
+  const [languages, setLanguages] = useState<string[]>(['All languages', ...fallbackProgrammingLanguages, 'Other'])
   const [sortOpen, setSortOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
-  const [uiLanguage, setUiLanguage] = useState<UiLanguage>(() => { const saved = localStorage.getItem('scriptly_ui_language'); return interfaceLanguages.includes(saved ?? '') ? saved as UiLanguage : 'English' })
+  const [uiLanguage, setUiLanguage] = useState<UiLanguage>(() => { const saved = localStorage.getItem('scriptly_ui_language'); return interfaceLanguages.includes(saved as UiLanguage) ? saved as UiLanguage : 'English' })
+
+  const t = translations[uiLanguage] ?? english
 
   useEffect(() => { localStorage.setItem('scriptly_theme', dark ? 'dark' : 'light') }, [dark])
   useEffect(() => { localStorage.setItem('scriptly_ui_language', uiLanguage) }, [uiLanguage])
-  useEffect(() => { const onPop = () => setPath(window.location.pathname); window.addEventListener('popstate', onPop); supabase.auth.getSession().then(({ data }) => setUserEmail(data.session?.user.email ?? null)); const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUserEmail(session?.user.email ?? null)); return () => { window.removeEventListener('popstate', onPop); listener.subscription.unsubscribe() } }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const loadLanguages = async () => {
+      try {
+        const response = await fetch('https://emkc.org/api/v2/piston/runtimes')
+        if (!response.ok) throw new Error('Language API request failed')
+        const data = await response.json() as Array<{ language?: string; aliases?: string[] }>
+        const names = Array.from(new Set(data.flatMap(item => [item.language ?? '', ...(item.aliases ?? [])]).filter(Boolean).map(normalizeLanguageName)))
+          .sort((a, b) => a.localeCompare(b))
+        if (!cancelled && names.length) setLanguages(['All languages', ...names, 'Other'])
+      } catch {
+        if (!cancelled) setLanguages(['All languages', ...fallbackProgrammingLanguages, 'Other'])
+      }
+    }
+    void loadLanguages()
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    const onPop = () => setPath(window.location.pathname)
+    window.addEventListener('popstate', onPop)
+    supabase.auth.getSession().then(({ data }) => setUserEmail(data.session?.user.email ?? null))
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUserEmail(session?.user.email ?? null))
+    return () => { window.removeEventListener('popstate', onPop); listener.subscription.unsubscribe() }
+  }, [])
 
   if (path === '/signin' || path === '/signup') return <AuthPage mode={path === '/signup' ? 'signup' : 'signin'} />
   if (path === '/verify-email') return <VerifyEmailPage />
   if (path === '/settings') return <SettingsPage dark={dark} setDark={setDark} language={uiLanguage} setLanguage={setUiLanguage} />
 
   const signOut = async () => { await supabase.auth.signOut(); setUserEmail(null) }
-  const filtered = scripts.filter(script => { const matchesSearch = `${script.title} ${script.description} ${script.language} ${script.author}`.toLowerCase().includes(query.toLowerCase()); const matchesLanguage = language === 'All languages' || (language === 'Other' ? !languages.slice(0, -1).includes(script.language) : script.language === language); return matchesSearch && matchesLanguage })
+  const filtered = scripts.filter(script => {
+    const matchesSearch = `${script.title} ${script.description} ${script.language} ${script.author}`.toLowerCase().includes(query.toLowerCase())
+    const matchesLanguage = language === 'All languages' || (language === 'Other' ? !languages.slice(1, -1).includes(script.language) : script.language === language)
+    return matchesSearch && matchesLanguage
+  })
   const visibleScripts = [...filtered].sort((a, b) => sort === 'popular' ? b.likes - a.likes : sort === 'az' ? a.title.localeCompare(b.title) : 0)
   const copyCode = async (code: string) => { await navigator.clipboard.writeText(code) }
   const chooseSort = (value: SortOption) => { setSort(value); setSortOpen(false) }
   const chooseLanguage = (value: string) => { setLanguage(value); setLanguageOpen(false) }
 
-  return <div className={`app ${dark ? 'theme-dark' : 'theme-light'}`}>
-    <style>{`.feed-box{width:100%;margin:0 0 70px;padding:26px;border:1px solid var(--border);border-radius:26px;background:color-mix(in srgb,var(--surface) 94%,transparent);box-shadow:var(--shadow)}.feed-header{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:0 0 22px}.feed-title{min-width:0}.feed-sort-wrap,.language-filter{position:relative}.feed-sort-button,.language-button{display:flex;align-items:center;gap:9px;min-height:42px;padding:8px 12px;border:1px solid var(--border);border-radius:12px;color:var(--heading);background:var(--surface);font-size:15px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.035);transition:.18s ease}.feed-sort-button:hover,.language-button:hover{border-color:var(--green-strong);transform:translateY(-1px)}.feed-sort-button .chevron,.language-button .chevron{color:var(--muted);font-size:13px;transition:transform .18s ease}.feed-sort-button.open .chevron,.language-button.open .chevron{transform:rotate(180deg)}.feed-title p{margin:7px 0 0;color:var(--muted);font-size:14px}.feed-filters{display:flex;align-items:center;gap:10px}.filter-label{display:grid;gap:6px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}.dropdown-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:50;width:210px;max-height:320px;overflow-y:auto;padding:6px;border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:0 18px 45px rgba(0,0,0,.16)}.feed-sort-wrap .dropdown-menu{left:0;right:auto;width:190px}.dropdown-option{width:100%;display:flex;align-items:center;justify-content:space-between;padding:9px 10px;border-radius:9px;color:var(--text);background:transparent;text-align:left;font-size:12px}.dropdown-option:hover{color:var(--heading);background:var(--surface-2)}.dropdown-option.selected{color:var(--green-strong);background:color-mix(in srgb,var(--green) 12%,var(--surface));font-weight:800}.script-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding-bottom:0}.script-card{min-width:0}.settings-button{width:46px;height:46px;display:grid;place-items:center;color:var(--heading);background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.06);transition:.2s ease}.settings-button:hover{transform:translateY(-1px);border-color:var(--green-strong);box-shadow:0 8px 25px rgba(66,216,121,.12)}.settings-button svg{width:23px;height:23px}@media(max-width:820px){.feed-box{padding:18px;border-radius:20px}.feed-header{align-items:flex-start;flex-direction:column}.feed-filters{width:100%}.language-filter,.language-button{width:100%}.language-button{justify-content:space-between}.dropdown-menu{left:0;right:auto;width:100%}.script-grid{grid-template-columns:1fr}}`}</style>
-    <header className="navbar"><button className="brand" onClick={() => { setQuery(''); go('/') }} aria-label="Scriptly home"><span className="brand-mark">S</span><span>Scriptly</span></button><div className="nav-center"><button className="nav-link active" onClick={() => go('/')}><Icon name="home" /> <span>{translations[uiLanguage].home}</span></button><label className="search"><Icon name="search" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder={translations[uiLanguage].search} /><kbd>/</kbd></label></div><div className="nav-actions"><button className="settings-button" aria-label={translations[uiLanguage].settings} onClick={() => go('/settings')}><Icon name="settings" /></button>{userEmail ? <button className="profile-button signed-in" onClick={signOut} title="Sign out"><span className="avatar"><Icon name="user" /></span><span className="profile-label">{userEmail.split('@')[0]}</span></button> : <button className="profile-button" aria-label={translations[uiLanguage].signIn} onClick={() => go('/signin')}><span className="avatar"><Icon name="user" /></span><span className="profile-label">{translations[uiLanguage].signIn}</span></button>}</div></header>
-    <main><section className="hero-section"><div className="eyebrow"><span className="pulse" /> {translations[uiLanguage].community}</div><h1>{uiLanguage === 'English' ? <>Find it. <span>Build it.</span> Share it.</> : translations[uiLanguage].hero}</h1><p>{translations[uiLanguage].discover}</p><div className="hero-actions"><button className="primary-button">{translations[uiLanguage].browse}</button><button className="secondary-button" onClick={() => go(userEmail ? '/publish' : '/signin')}>{translations[uiLanguage].publish}</button></div></section><section className="feed-box"><div className="feed-header"><div className="feed-title"><div className="feed-sort-wrap"><button className={`feed-sort-button ${sortOpen ? 'open' : ''}`} onClick={() => { setSortOpen(!sortOpen); setLanguageOpen(false) }} aria-expanded={sortOpen} aria-haspopup="listbox">{sort === 'latest' ? translations[uiLanguage].latest : sort === 'popular' ? translations[uiLanguage].popular : translations[uiLanguage].az}<span className="chevron">⌄</span></button>{sortOpen && <div className="dropdown-menu" role="listbox">{([['latest', translations[uiLanguage].latest], ['popular', translations[uiLanguage].popular], ['az', translations[uiLanguage].az]] as const).map(([value,label]) => <button key={value} className={`dropdown-option ${sort === value ? 'selected' : ''}`} onClick={() => chooseSort(value)}>{label}{sort === value && <span>✓</span>}</button>)}</div>}</div><p>{translations[uiLanguage].fresh}</p></div><div className="feed-filters"><div className="language-filter"><label className="filter-label">{translations[uiLanguage].language}<button className={`language-button ${languageOpen ? 'open' : ''}`} onClick={() => { setLanguageOpen(!languageOpen); setSortOpen(false) }} aria-expanded={languageOpen} aria-haspopup="listbox"><span>{language}</span><span className="chevron">⌄</span></button></label>{languageOpen && <div className="dropdown-menu" role="listbox">{languages.map(item => <button key={item} className={`dropdown-option ${language === item ? 'selected' : ''}`} onClick={() => chooseLanguage(item)}>{item}{language === item && <span>✓</span>}</button>)}</div>}</div></div></div><section className="script-grid">{visibleScripts.map(script => { const isLiked = liked[script.title]; return <article className="script-card" key={script.title}><div className="script-heading"><div><div className="language"><span />{script.language}</div><h3>{script.title}</h3><p>{script.description}</p></div><button className="report-button" aria-label="Report script"><Icon name="flag" /></button></div><pre><code>{script.code}</code></pre><div className="card-footer"><div className="author"><span className="mini-avatar">{script.author[0].toUpperCase()}</span><span>{script.author}</span></div><div className="card-actions"><button onClick={() => copyCode(script.code)}><Icon name="copy" /> Copy</button><button><Icon name="download" /> Download</button><button className={`like-button ${isLiked ? 'liked' : ''}`} aria-label={isLiked ? 'Unlike script' : 'Like script'} onClick={() => setLiked(current => ({ ...current, [script.title]: !isLiked }))}><Icon name="heart" /> {script.likes + (isLiked ? 1 : 0)}</button></div></div><button className="view-button">View in full screen <span>↗</span></button></article> })}</section>{visibleScripts.length === 0 && <div className="empty-scripts">No scripts match those filters.</div>}</section></main><footer><span>Scriptly</span><span>Built for people who love to code.</span><button onClick={() => setDark(current => !current)}>{dark ? `Switch to light` : `Switch to dark`}</button></footer>
-  </div>
+  return <div className={`app ${dark ? 'theme-dark' : 'theme-light'}`}><header className="navbar"><button className="brand" onClick={() => { setQuery(''); go('/') }} aria-label="Scriptly home"><span className="brand-mark">S</span><span>Scriptly</span></button><div className="nav-center"><button className="nav-link active" onClick={() => go('/')}><Icon name="home" /> <span>{t.home}</span></button><label className="search"><Icon name="search" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder={t.search} /><kbd>/</kbd></label></div><div className="nav-actions"><button className="settings-button" aria-label={t.settings} onClick={() => go('/settings')}><Icon name="settings" /></button>{userEmail ? <button className="profile-button signed-in" onClick={signOut} title="Sign out"><span className="avatar"><Icon name="user" /></span><span className="profile-label">{userEmail.split('@')[0]}</span></button> : <button className="profile-button" aria-label={t.signIn} onClick={() => go('/signin')}><span className="avatar"><Icon name="user" /></span><span className="profile-label">{t.signIn}</span></button>}</div></header><main><section className="hero-section"><div className="eyebrow"><span className="pulse" /> {t.community}</div><h1>{uiLanguage === 'English' ? <>Find it. <span>Build it.</span> Share it.</> : t.hero}</h1><p>{t.discover}</p><div className="hero-actions"><button className="primary-button">{t.browse}</button><button className="secondary-button" onClick={() => go(userEmail ? '/publish' : '/signin')}>{t.publish}</button></div></section><section className="feed-box"><div className="feed-header"><div className="feed-title"><div className="feed-sort-wrap"><button className={`feed-sort-button ${sortOpen ? 'open' : ''}`} onClick={() => { setSortOpen(!sortOpen); setLanguageOpen(false) }} aria-expanded={sortOpen} aria-haspopup="listbox">{sort === 'latest' ? t.latest : sort === 'popular' ? t.popular : t.az}<span className="chevron">⌄</span></button>{sortOpen && <div className="dropdown-menu" role="listbox">{([['latest', t.latest], ['popular', t.popular], ['az', t.az]] as const).map(([value, label]) => <button key={value} className={`dropdown-option ${sort === value ? 'selected' : ''}`} onClick={() => chooseSort(value)}>{label}{sort === value && <span>✓</span>}</button>)}</div>}</div><p>{t.fresh}</p></div><div className="feed-filters"><div className="language-filter"><label className="filter-label">{t.language}<button className={`language-button ${languageOpen ? 'open' : ''}`} onClick={() => { setLanguageOpen(!languageOpen); setSortOpen(false) }} aria-expanded={languageOpen} aria-haspopup="listbox"><span>{language}</span><span className="chevron">⌄</span></button></label>{languageOpen && <div className="dropdown-menu" role="listbox">{languages.map(item => <button key={item} className={`dropdown-option ${language === item ? 'selected' : ''}`} onClick={() => chooseLanguage(item)}>{item}{language === item && <span>✓</span>}</button>)}</div>}</div></div></div><section className="script-grid">{visibleScripts.map(script => { const isLiked = liked[script.title]; return <article className="script-card" key={script.title}><div className="script-heading"><div><div className="language"><span />{script.language}</div><h3>{script.title}</h3><p>{script.description}</p></div><button className="report-button" aria-label="Report script"><Icon name="flag" /></button></div><pre><code>{script.code}</code></pre><div className="card-footer"><div className="author"><span className="mini-avatar">{script.author[0].toUpperCase()}</span><span>{script.author}</span></div><div className="card-actions"><button onClick={() => copyCode(script.code)}><Icon name="copy" /> Copy</button><button><Icon name="download" /> Download</button><button className={`like-button ${isLiked ? 'liked' : ''}`} aria-label={isLiked ? 'Unlike script' : 'Like script'} onClick={() => setLiked(current => ({ ...current, [script.title]: !isLiked }))}><Icon name="heart" /> {script.likes + (isLiked ? 1 : 0)}</button></div></div><button className="view-button">View in full screen <span>↗</span></button></article> })}</section>{visibleScripts.length === 0 && <div className="empty-scripts">No scripts match those filters.</div>}</section></main><footer><span>Scriptly</span><span>Built for people who love to code.</span><button onClick={() => setDark(current => !current)}>{dark ? 'Switch to light' : 'Switch to dark'}</button></footer></div>
 }
 
 export default App
