@@ -73,6 +73,7 @@ function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
 
   return <div className="auth-page-shell">
     <div className="auth-page-card">
+      <button className="auth-back-button" onClick={() => go('/')} aria-label="Back to home">← <span>Back</span></button>
       <button className="auth-page-brand" onClick={() => go('/')}><span className="brand-mark">S</span><span>Scriptly</span></button>
       <div className="auth-page-icon">S</div>
       <h1>{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h1>
@@ -116,6 +117,7 @@ function VerifyEmailPage() {
 
   return <div className="auth-page-shell">
     <div className="auth-page-card verify-card">
+      <button className="auth-back-button" onClick={() => go('/')} aria-label="Back to home">← <span>Back</span></button>
       <button className="auth-page-brand" onClick={() => go('/')}><span className="brand-mark">S</span><span>Scriptly</span></button>
       <div className="verify-icon">✓</div>
       <h1>{verified ? 'Email verified' : 'Check your email'}</h1>
