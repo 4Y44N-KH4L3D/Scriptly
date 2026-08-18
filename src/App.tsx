@@ -9,8 +9,7 @@ const scripts: Script[] = [
   { title: 'Fetch JSON safely', description: 'A small async helper for fetching JSON with useful error handling.', language: 'JavaScript', author: 'ayaan', likes: 24, code: `async function fetchJson(url) {\n  const response = await fetch(url)\n\n  if (!response.ok) {\n    throw new Error(\`HTTP \${response.status}\`)\n  }\n\n  return response.json()\n}` },
 ]
 
-const languages = ['All languages', 'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'Rust', 'Go', 'HTML', 'CSS', 'PHP', 'Ruby', 'Kotlin', 'Swift', 'Bash', 'SQL', 'Other']
-
+const languages = ['All languages', 'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'Rust', 'Go', 'HTML', 'CSS', 'PHP', 'Ruby', 'Kotlin', 'Swift', 'Bash', 'SQL', 'Lua', 'Dart', 'R', 'Scala', 'Perl', 'Haskell', 'Assembly', 'Other']
 type SortOption = 'latest' | 'popular' | 'az'
 
 function Icon({ name }: { name: 'search' | 'home' | 'settings' | 'user' | 'heart' | 'copy' | 'download' | 'flag' | 'x' }) {
@@ -121,6 +120,8 @@ function App() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [sort, setSort] = useState<SortOption>('latest')
   const [language, setLanguage] = useState('All languages')
+  const [sortOpen, setSortOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
 
   useEffect(() => {
     const onPop = () => setPath(window.location.pathname)
@@ -134,12 +135,42 @@ function App() {
   if (path === '/verify-email') return <VerifyEmailPage />
 
   const signOut = async () => { await supabase.auth.signOut(); setUserEmail(null) }
-  const filtered = scripts.filter((script) => `${script.title} ${script.description} ${script.language} ${script.author}`.toLowerCase().includes(query.toLowerCase()) && (language === 'All languages' || script.language === language))
+  const filtered = scripts.filter((script) => {
+    const matchesSearch = `${script.title} ${script.description} ${script.language} ${script.author}`.toLowerCase().includes(query.toLowerCase())
+    const matchesLanguage = language === 'All languages' || (language === 'Other' ? !languages.slice(0, -1).includes(script.language) : script.language === language)
+    return matchesSearch && matchesLanguage
+  })
   const visibleScripts = [...filtered].sort((a, b) => sort === 'popular' ? b.likes - a.likes : sort === 'az' ? a.title.localeCompare(b.title) : 0)
   const copyCode = async (code: string) => { await navigator.clipboard.writeText(code) }
   const sortLabel = sort === 'latest' ? 'Latest scripts' : sort === 'popular' ? 'Most popular' : 'A–Z'
 
+  const chooseSort = (value: SortOption) => { setSort(value); setSortOpen(false) }
+  const chooseLanguage = (value: string) => { setLanguage(value); setLanguageOpen(false) }
+
   return <div className={`app ${dark ? 'theme-dark' : 'theme-light'}`}>
+    <style>{`
+      .feed-box { width: 100%; margin: 0 0 70px; padding: 26px; border: 1px solid var(--border); border-radius: 26px; background: color-mix(in srgb, var(--surface) 94%, transparent); box-shadow: var(--shadow); }
+      .feed-header { display:flex; align-items:center; justify-content:space-between; gap:24px; margin:0 0 22px; }
+      .feed-title { min-width:0; }
+      .feed-sort-wrap, .language-filter { position:relative; }
+      .feed-sort-button, .language-button { display:flex; align-items:center; gap:9px; min-height:42px; padding:8px 12px; border:1px solid var(--border); border-radius:12px; color:var(--heading); background:var(--surface); font-size:15px; font-weight:800; box-shadow:0 4px 14px rgba(0,0,0,.035); transition:.18s ease; }
+      .feed-sort-button:hover, .language-button:hover { border-color:var(--green-strong); transform:translateY(-1px); }
+      .feed-sort-button .chevron, .language-button .chevron { color:var(--muted); font-size:13px; transition:transform .18s ease; }
+      .feed-sort-button.open .chevron, .language-button.open .chevron { transform:rotate(180deg); }
+      .feed-title p { margin:7px 0 0; color:var(--muted); font-size:14px; }
+      .feed-filters { display:flex; align-items:center; gap:10px; }
+      .filter-label { display:grid; gap:6px; color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+      .dropdown-menu { position:absolute; top:calc(100% + 8px); right:0; z-index:50; width:210px; max-height:320px; overflow-y:auto; padding:6px; border:1px solid var(--border); border-radius:14px; background:var(--surface); box-shadow:0 18px 45px rgba(0,0,0,.16); }
+      .feed-sort-wrap .dropdown-menu { left:0; right:auto; width:190px; }
+      .dropdown-option { width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 10px; border-radius:9px; color:var(--text); background:transparent; text-align:left; font-size:12px; }
+      .dropdown-option:hover { color:var(--heading); background:var(--surface-2); }
+      .dropdown-option.selected { color:var(--green-strong); background:color-mix(in srgb, var(--green) 12%, var(--surface)); font-weight:800; }
+      .dropdown-check { font-size:13px; }
+      .script-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; padding-bottom:0; }
+      .script-card { min-width:0; }
+      @media (max-width:820px) { .feed-box { padding:18px; border-radius:20px; } .feed-header { align-items:flex-start; flex-direction:column; } .feed-filters { width:100%; } .language-filter, .language-button { width:100%; } .language-button { justify-content:space-between; } .dropdown-menu { left:0; right:auto; width:100%; } .script-grid { grid-template-columns:1fr; } }
+    `}</style>
+
     <header className="navbar">
       <button className="brand" onClick={() => { setQuery(''); go('/') }} aria-label="Scriptly home"><span className="brand-mark">S</span><span>Scriptly</span></button>
       <div className="nav-center"><button className="nav-link active" onClick={() => go('/')}><Icon name="home" /> <span>Home</span></button><label className="search"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search scripts..." /><kbd>/</kbd></label></div>
@@ -152,11 +183,28 @@ function App() {
       <section className="feed-box">
         <div className="feed-header">
           <div className="feed-title">
-            <label className="feed-sort">{sortLabel}<span>⌄</span><select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} aria-label="Sort scripts"><option value="latest">Latest scripts</option><option value="popular">Most popular</option><option value="az">A–Z</option></select></label>
+            <div className="feed-sort-wrap">
+              <button className={`feed-sort-button ${sortOpen ? 'open' : ''}`} onClick={() => { setSortOpen(!sortOpen); setLanguageOpen(false) }} aria-expanded={sortOpen} aria-haspopup="listbox">
+                {sortLabel}<span className="chevron">⌄</span>
+              </button>
+              {sortOpen && <div className="dropdown-menu" role="listbox">
+                {([['latest', 'Latest scripts'], ['popular', 'Most popular'], ['az', 'A–Z']] as const).map(([value, label]) => <button key={value} className={`dropdown-option ${sort === value ? 'selected' : ''}`} onClick={() => chooseSort(value)}>{label}{sort === value && <span className="dropdown-check">✓</span>}</button>)}
+              </div>}
+            </div>
             <p>Fresh code from the Scriptly community</p>
           </div>
+
           <div className="feed-filters">
-            <label>Language<select value={language} onChange={(e) => setLanguage(e.target.value)}>{languages.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <div className="language-filter">
+              <label className="filter-label">Language
+                <button className={`language-button ${languageOpen ? 'open' : ''}`} onClick={() => { setLanguageOpen(!languageOpen); setSortOpen(false) }} aria-expanded={languageOpen} aria-haspopup="listbox">
+                  <span>{language}</span><span className="chevron">⌄</span>
+                </button>
+              </label>
+              {languageOpen && <div className="dropdown-menu" role="listbox">
+                {languages.map((item) => <button key={item} className={`dropdown-option ${language === item ? 'selected' : ''}`} onClick={() => chooseLanguage(item)}>{item}{language === item && <span className="dropdown-check">✓</span>}</button>)}
+              </div>}
+            </div>
           </div>
         </div>
 
