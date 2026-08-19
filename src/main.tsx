@@ -5,6 +5,7 @@ import './auth.css'
 import './polish.css'
 import './transitions.css'
 import './Settings.css'
+import './navbar-fix.css'
 import App from './App.tsx'
 import SettingsPage from './SettingsPage.tsx'
 
