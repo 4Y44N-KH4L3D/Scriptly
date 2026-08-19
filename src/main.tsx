@@ -7,6 +7,14 @@ import './transitions.css'
 import './Settings.css'
 import App from './App.tsx'
 
+// Keep the auth pages in sync with Scriptly's saved theme.
+const syncTheme = () => {
+  document.documentElement.dataset.theme = localStorage.getItem('scriptly_theme') === 'dark' ? 'dark' : 'light'
+}
+
+syncTheme()
+window.setInterval(syncTheme, 250)
+
 // Give the dedicated auth back button a smooth SPA transition.
 document.addEventListener('click', (event) => {
   const target = event.target instanceof Element ? event.target.closest('.auth-back-button') : null
