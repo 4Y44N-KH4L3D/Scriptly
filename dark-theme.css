@@ -1,8 +1,18 @@
 :root {
   color-scheme: dark;
+  --page: #0e1210;
+  --surface: #151a17;
+  --surface-2: #1b221e;
+  --text: #a8b4ad;
+  --heading: #f2f7f3;
+  --border: #29332e;
+  --muted: #748078;
+  --code: #090c0a;
+  --code-text: #8cf0aa;
+  --shadow: 0 22px 60px rgba(0,0,0,.3);
 }
 
-/* Scriptly uses one theme: dark. Keep these values independent of the old theme state. */
+/* Scriptly uses one theme: dark. Keep the app and standalone pages on the same palette. */
 .app,
 .app.theme-light,
 .app.theme-dark {
@@ -16,6 +26,11 @@
   --code: #090c0a;
   --code-text: #8cf0aa;
   --shadow: 0 22px 60px rgba(0,0,0,.3);
+}
+
+html, body {
+  background: var(--page);
+  color: var(--text);
 }
 
 /* Remove the old theme-switch controls from the UI. */
