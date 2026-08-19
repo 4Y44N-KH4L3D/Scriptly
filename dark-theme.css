@@ -27,11 +27,3 @@ footer button {
 .settings-app .settings-note {
   display: none !important;
 }
-
-.settings-app .settings-shell::after {
-  content: 'Dark theme is always enabled.';
-  display: block;
-  margin-top: 18px;
-  color: var(--muted);
-  font-size: 12px;
-}
