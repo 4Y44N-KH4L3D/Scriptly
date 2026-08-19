@@ -1,0 +1,43 @@
+.navbar {
+  width: min(1400px, calc(100% - 28px)) !important;
+  height: 72px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+}
+
+.navbar .brand,
+.navbar .brand:hover,
+.navbar .brand:focus,
+.navbar .brand:focus-visible,
+.navbar .brand:active {
+  position: absolute !important;
+  left: 50% !important;
+  right: auto !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  width: max-content !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 13px !important;
+  font-size: 30px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.navbar .brand .brand-mark {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 14px !important;
+  font-size: 23px !important;
+}
+
+@media (max-width: 820px) {
+  .navbar {
+    width: calc(100% - 24px) !important;
+    height: 64px !important;
+  }
+}
