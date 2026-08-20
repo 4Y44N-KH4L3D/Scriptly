@@ -81,7 +81,6 @@ footer button { color: var(--muted); background: transparent; display: none; }
 @media (max-width: 820px) { .navbar { top: 12px; width: calc(100% - 24px); height: 64px; padding: 0 16px; border-radius: 19px; } .nav-link { display: none; } .hero-section .search-wrap { width: 100%; } .profile-label { display: none; } .script-grid { grid-template-columns: 1fr; } .hero-section { padding-top: 55px; padding-bottom: 24px; } main { padding-top: 80px; } }
 @media (max-width: 520px) { main, footer { width: min(100% - 24px, 1180px); } .brand span:last-child { display: none; } .hero-section h1 { letter-spacing: -2.5px; } .hero-actions { flex-direction: column; } .hero-actions button { width: 100%; } .feed-header { align-items: start; gap: 10px; } .filter-button { display: none; } .script-card { padding: 15px; } .card-footer { align-items: start; flex-direction: column; } .card-actions { width: 100%; justify-content: space-between; } footer { flex-wrap: wrap; gap: 10px; } }
 
-/* Navbar sizing/centering only — keep the rest of the UI untouched. */
-.navbar .brand { position: absolute !important; left: 50% !important; top: 50%; transform: translate(-50%, -50%) !important; margin: 0 !important; }
-.navbar { width: min(1320px, calc(100% - 32px)); }
-@media (max-width: 820px) { .navbar { width: calc(100% - 24px); } .navbar .brand { left: 50% !important; } }
+/* Navbar container only — existing Scriptly brand is untouched. */
+.navbar { width: min(1400px, calc(100% - 32px)); }
+@media (max-width: 820px) { .navbar { width: calc(100% - 24px); } }
